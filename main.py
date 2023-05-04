@@ -1,6 +1,6 @@
 
-from yamata.qparsing.vparser import parser
-from yamata.compile import *
+from yamata.compile import compile
+from yamata.backend import *
 
 if __name__ == "__main__":
 
@@ -36,9 +36,6 @@ if __name__ == "__main__":
     '''
 
 
-    ast = parser.parse(code2)
+    optlib = get_optlib()
 
-    print(ast)
-    fc = compile_fc(ast)
-    fc.show(show_prog=True)
-
+    compile(code2, optlib, "output")

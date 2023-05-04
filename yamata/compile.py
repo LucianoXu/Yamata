@@ -10,7 +10,11 @@
 from __future__ import annotations
 from typing import List, Tuple
 
-from .flowchart.flowchart import *
+from .qparsing.vparser import parser
+from .flowchart.flowchart import Flowchart, Vertex
+
+from .backend import OptEnv
+
 from .qast import *
 
 
@@ -140,4 +144,29 @@ def extend_fc(fc : Flowchart, v : Vertex):
         fc.createE(pair[0], v, u)
                 
 
+
+
+######################################################
+# interface
+
+def compile(code : str, optlib : OptEnv, 
+            output_path : str | None = None, show_prog = True) -> Flowchart:
+    '''
+        compile the code string to a flowchart.
+        output_path : whether to output the diagram
+        show_prog : will replace program codes with vertex numbers if set to False
+    '''
+
+    ast = parser.parse(code)
+
+    # compile abstract syntax tree to flowchart
+    fc = compile_fc(ast)
+
+    # flowchart: semantic check with operator library
+    fc.semantic_check(optlib)
+
+    if output_path is not None:
+        fc.show(path = output_path, show_prog = show_prog)
+
+    return fc
     

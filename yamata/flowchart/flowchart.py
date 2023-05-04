@@ -3,175 +3,11 @@ from __future__ import annotations
 from typing import List
 
 from ..qast import *
+from ..backend import *
+
+from .vertex_edge import *
 
 from graphviz import Digraph
-
-
-#################################
-# Vertices
-
-class Vertex:
-    def __init__(self, _label, _id : int):
-
-        # the label for identity of vertices
-        self.label = _label 
-
-        # the unique number assigned to this vertex
-        self.id = _id
-
-        # the list of input and output edges
-        self.inE : List[Edge] = []
-        self.outE : List[Edge] = []
-
-    def layout(self, dot : Digraph, show_prog = True) -> None:
-        '''
-        add this vertex to the flowchart
-        '''
-
-        raise NotImplementedError()
-    
-    def processed_label(self) -> str:
-        txt = str(self.label)
-
-        # if no line breaks
-        if txt.find('\n') == -1:
-            return txt
-        
-        txt = txt.replace('\n', '\\l') + "\\l"
-        return txt
-    
-class TVertex(Vertex):
-    '''
-    terminal vertex
-    '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
-            shape = "doublecircle",
-            fontname = "Consolas",
-            labeljust="l")
-
-
-class OVertex(Vertex):
-    '''
-    ordinary vertex, one outgoing edge
-    '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
-            shape = "box", style="filled",
-            fontname = "Consolas",
-            labeljust="l")
-
-
-class PVertex(Vertex):
-    '''
-    parallel composition vertex
-    '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
-            shape = "box", style="filled", fillcolor = "lightyellow",
-            fontname = "Consolas",
-            labeljust="l")
-
-class MVertex(Vertex):
-    '''
-    measurement vertex
-    '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
-            shape = "box", style="filled", fillcolor = "lightblue",
-            fontname = "Consolas",
-            labeljust="l")
-
-
-
-##################################
-# Edges
-
-class Edge:
-    def __init__(self, _A : Vertex, _B : Vertex):
-        self.A = _A
-        self.B = _B
-
-    def layout(self, dot : Digraph) -> None:
-        '''
-        add this edge to the flowchart
-        '''
-        raise NotImplementedError()
-        
-
-class IdEdge(Edge):
-    '''
-    identity edge, going out from parallel composition vertices
-    '''
-    def layout(self, dot : Digraph) -> None:
-        dot.edge(str(self.A.id), str(self.B.id), style = "dotted", arrowhead = "empty")
-
-
-class UEdge(Edge):
-    '''
-    unitary operation edge
-    '''
-    def __init__(self, _A: Vertex, _B: Vertex, _vopt: AstVOpt):
-        super().__init__(_A, _B)
-        self.vopt = _vopt
-
-    def layout(self, dot : Digraph) -> None:
-        dot.edge(str(self.A.id), str(self.B.id), 
-                label = str(self.vopt), fontname = "Consolas bold")
-
-class AEdge(Edge):
-    '''
-    abort edge
-    '''
-    def layout(self, dot : Digraph) -> None:
-        dot.edge(str(self.A.id), str(self.B.id), color = 'lightgray')
-
-class InitEdge(Edge):
-    '''
-    initializatoin edge
-    '''
-    def __init__(self, _A: Vertex, _B: Vertex, _qvar : AstQVar):
-        super().__init__(_A, _B)
-        self.qvar = _qvar
-    
-    def layout(self, dot : Digraph) -> None:
-        dot.edge(str(self.A.id), str(self.B.id),
-                 label = str(self.qvar)+":=0", fontname = "Consolas bold")
-
-
-
-class MEdge(Edge):
-    '''
-    measurement edge
-    '''
-    def __init__(self, _A: Vertex, _B: Vertex, _vopt: AstVOpt):
-        super().__init__(_A, _B)
-        self.vopt = _vopt
-
-    def layout(self, dot: Digraph) -> None:
-        dot.edge(str(self.A.id), str(self.B.id), style = "dashed",
-                 label = str(self.vopt), fontname = "Consolas bold")
-
 
 class Flowchart:
     def __init__(self):
@@ -179,6 +15,7 @@ class Flowchart:
         # all vertices for this flowchart
         self.vertices : List[Vertex] = []
         self.edges : List[Edge] = []
+        self.optlib : OptEnv | None = None
 
     def findV(self, label) -> None | Vertex:
         '''
@@ -249,5 +86,20 @@ class Flowchart:
         dot.edge('-0', '0')
 
         dot.render(path)
+
+    def semantic_check(self, optlib : OptEnv) -> None:
+        '''
+            Check whether the flowchart is semantically valid with respect to the 
+            operator library [optlib].
+        '''
+
+        self.optlib = optlib
+
+        for e in self.edges:
+            e.semantic_check(optlib)
+        
+        for v in self.vertices:
+            v.semantic_check(optlib)
+
 
     
