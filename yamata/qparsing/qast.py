@@ -1,0 +1,168 @@
+from __future__ import annotations
+from typing import List
+
+from ..premises import *
+from . import vlexer
+
+
+
+class AstQVar:
+    def __init__(self, _ls : List[str]):
+        if not ls_uniqueness_check(_ls):
+            raise Exception()
+        
+        self.ls : List[str] = _ls
+
+    def appended(self, id : str) -> AstQVar:
+        return AstQVar(self.ls + [id])
+    
+    def __str__(self):
+        r = '[ '
+        for i in range(len(self.ls)-1):
+            r += self.ls[i] + ' '
+        r += self.ls[-1] + ' ]'
+        return r
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.ls == other.ls
+
+class AstVOpt:
+    def __init__(self, _opt_id : str, _qvar : AstQVar):
+        self.opt_id = _opt_id
+        self.qvar = _qvar
+    
+    def __str__(self):
+        return self.opt_id + str(self.qvar)
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+
+        return self.opt_id == other.opt_id and self.qvar == other.qvar
+
+class AstGuardedProg:
+    def __init__(self, _vopt : AstVOpt, _prog : AstStatement):
+        self.vopt = _vopt
+        self.prog = _prog
+
+    def to_str_prefix(self, pre: str) -> str:
+        r = pre + '# ' + str(self.vopt) + ' ' + vlexer.t_GUARD + '\n' \
+            + self.prog.to_str_prefix(pre + "\t") + "\n"
+        return r
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+
+        return self.vopt == other.vopt and self.prog == other.prog
+
+
+# Abstract syntax tree for programs
+class AstStatement:
+    def to_str_prefix(self, pre : str) -> str:
+        raise NotImplementedError()
+    
+    def __str__(self):
+        return self.to_str_prefix("")
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+
+        raise NotImplemented
+
+
+class AstSeq(AstStatement):
+    def __init__(self, _S0 : AstStatement, _S1 : AstStatement):
+        self.S0 = _S0
+        self.S1 = _S1
+    
+    def to_str_prefix(self, pre : str) -> str:
+        r = self.S0.to_str_prefix(pre) + ";\n" + self.S1.to_str_prefix(pre)
+        return r
+    
+    def __eq__(self, other):
+        return self.S0 == other.S0 and self.S1 == other.S1
+
+
+class AstSkip(AstStatement):
+    def to_str_prefix(self, pre: str) -> str:
+        return pre + 'skip'
+    
+    def __eq__(self, other):
+        return isinstance(other, AstSkip)
+
+class AstAbort(AstStatement):
+    def to_str_prefix(self, pre: str) -> str:
+        return pre + 'abort'
+    
+    def __eq__(self, other):
+        return isinstance(other, AstAbort)
+
+class AstInit(AstStatement):
+    def __init__(self, _qvar : AstQVar):
+        self.qvar = _qvar
+
+    def to_str_prefix(self, pre: str) -> str:
+        return pre + str(self.qvar) + ' ' + vlexer.t_INIT
+    
+    def __eq__(self, other):
+        return self.qvar == other.qvar
+
+class AstUnitary(AstStatement):
+    def __init__(self, _qvar : AstQVar, _opt_id : str):
+        self.qvar = _qvar
+        self.opt_id = _opt_id
+
+    def to_str_prefix(self, pre: str) -> str:
+        return pre + str(self.qvar) + ' *= ' + self.opt_id
+    
+    def __eq__(self, other):
+        return self.qvar == other.qvar and self.opt_id == other.opt_id
+
+class AstIf(AstStatement):
+    def __init__(self, _ls : List[AstGuardedProg]):
+        self.ls = _ls
+
+    def to_str_prefix(self, pre: str) -> str:
+        r = pre + "if \n"
+        for item in self.ls:
+            r += item.to_str_prefix(pre + "\t")
+        r += pre + "end"
+        return r
+    
+    def __eq__(self, other):
+        return self.ls == other.ls
+
+class AstWhile(AstStatement):
+    def __init__(self, _body : AstGuardedProg):
+        self.body = _body
+
+    def to_str_prefix(self, pre: str) -> str:
+        r = pre + "while \n"
+        r += self.body.to_str_prefix(pre + "\t")
+        r += pre + "end"
+        return r
+    
+    def __eq__(self, other):
+        return self.body == other.body
+        
+
+class AstParallel(AstStatement):
+    def __init__(self, _ls : List[AstStatement]):
+        self.ls = _ls
+    def appended(self, seq : AstStatement) -> AstParallel:
+        return AstParallel(self.ls + [seq])
+    
+    def to_str_prefix(self, pre : str) -> str:
+        r = pre + "[ \n"
+        for i in range(0, len(self.ls) - 1):
+            r += self.ls[i].to_str_prefix(pre + "\t") + " ||\n"
+        r += self.ls[-1].to_str_prefix(pre + "\t") + "\n"
+        r += pre + "]"
+        return r
+    
+    def __eq__(self, other):
+        return self.ls == other.ls
