@@ -94,9 +94,9 @@ def p_unitary(p):
 
 def p_if(p):
     '''
-    if      : IF guarded_prog_ls END
+    if      : IF guarded_prog_ls ELSE prog END
     '''
-    p[0] = qast.AstIf(p[2])
+    p[0] = qast.AstIf(p[2], p[4])
 
     if p[0] is None:
         raise Exception()

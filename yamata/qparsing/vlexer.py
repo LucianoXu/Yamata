@@ -15,6 +15,7 @@ reserved = {
     'skip'  : 'SKIP',
     'abort' : 'ABORT',
     'if'    : 'IF',
+    'else'  : 'ELSE',
     'while' : 'WHILE',
     'end'   : 'END',
 }
