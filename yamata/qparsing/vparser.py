@@ -10,7 +10,7 @@ from typing import Any, List
 import ply.yacc as yacc
 
 from .vlexer import tokens, lexer
-from . import qast
+from .. import qast
 
 
 # This is the grammar of a program
@@ -78,9 +78,9 @@ def p_init(p):
 
 def p_unitary(p):
     '''
-    unitary : ID qvar
+    unitary : vopt
     '''
-    p[0] = qast.AstUnitary(p[2], p[1])
+    p[0] = qast.AstUnitary(p[1])
 
     if p[0] is None:
         raise Exception()

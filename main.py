@@ -1,6 +1,6 @@
 
 from yamata.qparsing.vparser import parser
-from yamata.compile.compile import *
+from yamata.compile import *
 
 if __name__ == "__main__":
 
@@ -21,24 +21,24 @@ if __name__ == "__main__":
         end
         */
     '''
-
-    code2 = '''
-        [ while # M0[c] ->     
-            CX[c t]
-        # M1[c] -> end 
-        || H[c] ]
-
-    '''
-
     code2 = '''
         while # M0[c] ->     
             [ CX[c t] || t :=0 ]
         # M1[c] -> end
     '''
 
+    code2 = '''
+        [ while # M0[c] ->     
+            CX[c t]
+        # M1[c] -> end 
+        || H[c] || skip ]
+
+    '''
+
+
     ast = parser.parse(code2)
 
     print(ast)
     fc = compile_fc(ast)
-    fc.show()
+    fc.show(show_prog=True)
 

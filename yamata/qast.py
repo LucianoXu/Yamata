@@ -1,7 +1,18 @@
+'''
+
+    The abstract syntax tree for 
+
+        parallel quantum programs  in YAMATA
+
+        
+'''
+
+
+
+
+
 from __future__ import annotations
 from typing import List
-
-from . import vlexer
 
 
 def ls_uniqueness_check(ls : List) -> bool:
@@ -56,7 +67,7 @@ class AstGuardedProg:
         self.prog = _prog
 
     def to_str_prefix(self, pre: str) -> str:
-        r = pre + '# ' + str(self.vopt) + ' ' + vlexer.t_GUARD + '\n' \
+        r = pre + '# ' + str(self.vopt) + ' ' + '->' + '\n' \
             + self.prog.to_str_prefix(pre + "  ") + "\n"
         return r
     
@@ -83,6 +94,9 @@ class AstStatement:
             return self.S0.first()
         else:
             return self
+        
+    def __eq__(self, other):
+        raise NotImplementedError()
 
 
 class AstTerminal(AstStatement):
@@ -91,6 +105,9 @@ class AstTerminal(AstStatement):
 
     def __str__(self):
         return "↓"
+    
+    def __eq__(self, other):
+        return isinstance(other, AstTerminal)
 
 
 class AstSeq(AstStatement):
@@ -143,7 +160,7 @@ class AstInit(AstStatement):
         self.qvar = _qvar
 
     def to_str_prefix(self, pre: str) -> str:
-        return pre + str(self.qvar) + ' ' + vlexer.t_INIT
+        return pre + str(self.qvar) + ' ' + ':=0'
     
     def __eq__(self, other):
         if not isinstance(other, AstInit):
@@ -152,18 +169,17 @@ class AstInit(AstStatement):
         return self.qvar == other.qvar
 
 class AstUnitary(AstStatement):
-    def __init__(self, _qvar : AstQVar, _opt_id : str):
-        self.qvar = _qvar
-        self.opt_id = _opt_id
+    def __init__(self, _vopt : AstVOpt):
+        self.vopt = _vopt
 
     def to_str_prefix(self, pre: str) -> str:
-        return pre + self.opt_id + str(self.qvar) 
+        return pre + str(self.vopt)
     
     def __eq__(self, other):
         if not isinstance(other, AstUnitary):
             return False
 
-        return self.qvar == other.qvar and self.opt_id == other.opt_id
+        return self.vopt == other.vopt
 
 class AstIf(AstStatement):
     def __init__(self, _ls : List[AstGuardedProg]):
@@ -190,7 +206,7 @@ class AstWhile(AstStatement):
     def to_str_prefix(self, pre: str) -> str:
         r = pre + "while \n"
         r += self.body.to_str_prefix(pre + "  ")
-        r += pre + "  " + '# ' + str(self.term_vopt) + ' ' + vlexer.t_GUARD + " end"
+        r += pre + "  " + '# ' + str(self.term_vopt) + ' ' + '->' + " end"
         return r
     
     def __eq__(self, other):

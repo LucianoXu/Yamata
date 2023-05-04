@@ -1,42 +1,53 @@
+'''
+
+    The compiler for transforming program syntacies to flowcharts.
+
+
+'''
+
+
+
 from __future__ import annotations
-from typing import List
+from typing import List, Tuple
 
-from ..flowchart.flowchart import *
-from ..qparsing.qast import *
+from .flowchart.flowchart import *
+from .qast import *
 
 
-def next(ast : AstStatement) -> List[AstStatement]:
+def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStatement]]:
     '''
         return the abstract syntax tree for the next step.
-        The None means the terminal vertex.
+        result: a tuple, first element is the transformation, 
+            and the second element is the next program syntax
     '''
     if isinstance(ast, AstTerminal):
         return []
     elif isinstance(ast, AstSkip):
-        return [AstTerminal()]
+        return [(ast, AstTerminal())]
     elif isinstance(ast, AstAbort):
-        return [AstTerminal()]
+        return [(ast, AstTerminal())]
     elif isinstance(ast, AstInit):
-        return [AstTerminal()]
+        return [(ast, AstTerminal())]
     elif isinstance(ast, AstUnitary):
-        return [AstTerminal()]
+        return [(ast, AstTerminal())]
     elif isinstance(ast, AstIf):
-        return [guard.prog for guard in ast.ls]
+        return [(guard.vopt, guard.prog) for guard in ast.ls]
     elif isinstance(ast, AstWhile):
-        return [AstSeq(ast.body.prog, ast), AstTerminal()]
+        return [(ast.body.vopt, AstSeq(ast.body.prog, ast)), 
+                (ast.term_vopt, AstTerminal())]
     elif isinstance(ast, AstSeq):
         # case on S0
         next_S0_ls = next(ast.S0)
-        next_seq = []
-        for next_S0 in next_S0_ls:
-            if isinstance(next_S0, AstTerminal):
-                next_seq.append(ast.S1)
+        next_seq : List[Tuple[AstStatement|AstVOpt|None, AstStatement]] = []
+        for next_pair in next_S0_ls:
+            if isinstance(next_pair[1], AstTerminal):
+                next_seq.append((next_pair[0], ast.S1))
             else:
-                next_seq.append(AstSeq(next_S0, ast.S1))
+                next_seq.append((next_pair[0], AstSeq(next_pair[1], ast.S1)))
         return next_seq
     
     elif isinstance(ast, AstParallel):
-        next_para = []
+        next_para : List[Tuple[AstStatement|AstVOpt|None, AstStatement]] = []
         for i in range(len(ast.ls)):
             ast_i = ast.ls[i]
             if isinstance(ast_i, AstIf):
@@ -47,7 +58,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
                     new_para[i] = ast_i.ls[j].prog
                     new_guarded[j].prog = AstParallel(new_para)
                 
-                next_para.append(AstIf(new_guarded))
+                next_para.append((None, AstIf(new_guarded)))
 
             elif isinstance(ast_i, AstWhile):
                 # expand while to a if statement
@@ -57,7 +68,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
 
                 # else branch
                 new_guarded.append(AstGuardedProg(ast_i.term_vopt, ast.remove(i)))
-                next_para.append(AstIf(new_guarded))
+                next_para.append((None, AstIf(new_guarded)))
 
             elif isinstance(ast_i, AstSeq):
                 # match S0
@@ -70,7 +81,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
                         new_para[i] = AstSeq(ast_i.S0.ls[j].prog, ast_i.S1)
                         new_guarded[j].prog = AstParallel(new_para)
                     
-                    next_para.append(AstIf(new_guarded))
+                    next_para.append((None, AstIf(new_guarded)))
                 
                 if isinstance(ast_i.S0, AstWhile):
                     # expand while to a if statement
@@ -83,13 +94,13 @@ def next(ast : AstStatement) -> List[AstStatement]:
                     new_para = ast.ls.copy()
                     new_para[i] = ast_i.S1
                     new_guarded.append(AstGuardedProg(ast_i.S0.term_vopt, AstParallel(new_para)))
-                    next_para.append(AstIf(new_guarded))
+                    next_para.append((None, AstIf(new_guarded)))
 
                 if isinstance(ast_i.S0, AstSkip) or isinstance(ast_i.S0, AstAbort)\
                     or isinstance(ast_i.S0, AstInit) or isinstance(ast_i.S0, AstUnitary):
                     new_para = ast.ls.copy()
                     new_para[i] = ast_i.S1
-                    next_para.append(AstSeq(ast_i.S0, AstParallel(new_para)))
+                    next_para.append((None, AstSeq(ast_i.S0, AstParallel(new_para))))
 
                 else:
                     raise Exception()
@@ -97,7 +108,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
             elif isinstance(ast_i, AstSkip) or isinstance(ast_i, AstAbort)\
                 or isinstance(ast_i, AstInit) or isinstance(ast_i, AstUnitary):
                 
-                next_para.append(AstSeq(ast_i, ast.remove(i)))
+                next_para.append((None, AstSeq(ast_i, ast.remove(i))))
             
             else:
                 raise Exception()
@@ -118,15 +129,15 @@ def extend_fc(fc : Flowchart, v : Vertex):
     '''
        This method is invocated only when [fc] contains [ast].
     '''
-    next_label = next(v.label)
-    for lb in next_label:
+    next_pairs = next(v.label)
+    for pair in next_pairs:
         # if [fc] does not contain the next vertex [u] yet
-        u = fc.findV(lb)
+        u = fc.findV(pair[1])
         if u is None:
-            u = fc.createV(lb)
+            u = fc.createV(pair[1])
             extend_fc(fc, u)
-        new_e = Edge(v, u)
-        fc.createE(new_e)
+
+        fc.createE(pair[0], v, u)
                 
 
     
