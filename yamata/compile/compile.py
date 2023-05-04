@@ -21,7 +21,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
     elif isinstance(ast, AstUnitary):
         return [AstTerminal()]
     elif isinstance(ast, AstIf):
-        return [guard.prog for guard in ast.ls] + [ast.default_prog]
+        return [guard.prog for guard in ast.ls]
     elif isinstance(ast, AstWhile):
         return [AstSeq(ast.body.prog, ast), AstTerminal()]
     elif isinstance(ast, AstSeq):
@@ -47,10 +47,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
                     new_para[i] = ast_i.ls[j].prog
                     new_guarded[j].prog = AstParallel(new_para)
                 
-                # else branch
-                new_para = ast.ls.copy()
-                new_para[i] = ast_i.default_prog
-                next_para.append(AstIf(new_guarded, AstParallel(new_para)))
+                next_para.append(AstIf(new_guarded))
 
             elif isinstance(ast_i, AstWhile):
                 # expand while to a if statement
@@ -59,8 +56,8 @@ def next(ast : AstStatement) -> List[AstStatement]:
                 new_guarded = [AstGuardedProg(ast_i.body.vopt, AstParallel(new_para))]
 
                 # else branch
-                new_para = ast.remove(i)
-                next_para.append(AstIf(new_guarded, new_para))
+                new_guarded.append(AstGuardedProg(ast_i.term_vopt, ast.remove(i)))
+                next_para.append(AstIf(new_guarded))
 
             elif isinstance(ast_i, AstSeq):
                 # match S0
@@ -73,11 +70,7 @@ def next(ast : AstStatement) -> List[AstStatement]:
                         new_para[i] = AstSeq(ast_i.S0.ls[j].prog, ast_i.S1)
                         new_guarded[j].prog = AstParallel(new_para)
                     
-                    # else branch
-                    new_para = ast.ls.copy()
-                    # sequential composition here
-                    new_para[i] = AstSeq(ast_i.S0.default_prog, ast_i.S1)
-                    next_para.append(AstIf(new_guarded, AstParallel(new_para)))
+                    next_para.append(AstIf(new_guarded))
                 
                 if isinstance(ast_i.S0, AstWhile):
                     # expand while to a if statement
@@ -89,7 +82,8 @@ def next(ast : AstStatement) -> List[AstStatement]:
                     # else branch
                     new_para = ast.ls.copy()
                     new_para[i] = ast_i.S1
-                    next_para.append(AstIf(new_guarded, AstParallel(new_para)))
+                    new_guarded.append(AstGuardedProg(ast_i.S0.term_vopt, AstParallel(new_para)))
+                    next_para.append(AstIf(new_guarded))
 
                 if isinstance(ast_i.S0, AstSkip) or isinstance(ast_i.S0, AstAbort)\
                     or isinstance(ast_i.S0, AstInit) or isinstance(ast_i.S0, AstUnitary):

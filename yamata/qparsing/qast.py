@@ -25,10 +25,10 @@ class AstQVar:
         return AstQVar(self.ls + [id])
     
     def __str__(self):
-        r = '[ '
+        r = '['
         for i in range(len(self.ls)-1):
             r += self.ls[i] + ' '
-        r += self.ls[-1] + ' ]'
+        r += self.ls[-1] + ']'
         return r
     
     def __eq__(self, other):
@@ -157,7 +157,7 @@ class AstUnitary(AstStatement):
         self.opt_id = _opt_id
 
     def to_str_prefix(self, pre: str) -> str:
-        return pre + str(self.qvar) + ' *= ' + self.opt_id
+        return pre + self.opt_id + str(self.qvar) 
     
     def __eq__(self, other):
         if not isinstance(other, AstUnitary):
@@ -166,16 +166,13 @@ class AstUnitary(AstStatement):
         return self.qvar == other.qvar and self.opt_id == other.opt_id
 
 class AstIf(AstStatement):
-    def __init__(self, _ls : List[AstGuardedProg], _default_prog : AstStatement):
+    def __init__(self, _ls : List[AstGuardedProg]):
         self.ls = _ls
-        self.default_prog = _default_prog
 
     def to_str_prefix(self, pre: str) -> str:
         r = pre + "if \n"
         for item in self.ls:
             r += item.to_str_prefix(pre + "  ")
-        r += pre + "else \n"
-        r += self.default_prog.to_str_prefix(pre + "  ") + "\n"
         r += pre + "end"
         return r
     
@@ -183,23 +180,24 @@ class AstIf(AstStatement):
         if not isinstance(other, AstIf):
             return False
 
-        return self.ls == other.ls and self.default_prog == other.default_prog
+        return self.ls == other.ls
 
 class AstWhile(AstStatement):
-    def __init__(self, _body : AstGuardedProg):
+    def __init__(self, _body : AstGuardedProg, _term_vopt):
         self.body = _body
+        self.term_vopt = _term_vopt
 
     def to_str_prefix(self, pre: str) -> str:
         r = pre + "while \n"
         r += self.body.to_str_prefix(pre + "  ")
-        r += pre + "end"
+        r += pre + "  " + '# ' + str(self.term_vopt) + ' ' + vlexer.t_GUARD + " end"
         return r
     
     def __eq__(self, other):
         if not isinstance(other, AstWhile):
             return False
 
-        return self.body == other.body
+        return self.body == other.body and self.term_vopt == other.term_vopt
         
 
 class AstParallel(AstStatement):

@@ -78,15 +78,9 @@ def p_init(p):
 
 def p_unitary(p):
     '''
-    unitary : ID MUL_EQ ID
-            | qvar MUL_EQ ID
+    unitary : ID qvar
     '''
-    
-    if isinstance(p[1], qast.AstQVar):
-        p[0] = qast.AstUnitary(p[1], p[3])
-    else:
-        qvar = qast.AstQVar([p[1]])
-        p[0] = qast.AstUnitary(qvar, p[3])
+    p[0] = qast.AstUnitary(p[2], p[1])
 
     if p[0] is None:
         raise Exception()
@@ -94,9 +88,9 @@ def p_unitary(p):
 
 def p_if(p):
     '''
-    if      : IF guarded_prog_ls ELSE prog END
+    if      : IF guarded_prog_ls END
     '''
-    p[0] = qast.AstIf(p[2], p[4])
+    p[0] = qast.AstIf(p[2])
 
     if p[0] is None:
         raise Exception()
@@ -118,10 +112,10 @@ def p_guarded_prog_ls(p):
 
 def p_while(p):
     '''
-    while   : WHILE guarded_prog END
+    while   : WHILE guarded_prog '#' vopt GUARD END
     '''
 
-    p[0] = qast.AstWhile(p[2])
+    p[0] = qast.AstWhile(p[2], p[4])
 
     if p[0] is None:
         raise Exception()

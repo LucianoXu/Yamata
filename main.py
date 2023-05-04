@@ -24,14 +24,21 @@ if __name__ == "__main__":
 
     code2 = '''
         [ while # M0[c] ->     
-            [c t] *= CX
-        end 
-        || c *= H]
+            CX[c t]
+        # M1[c] -> end 
+        || H[c] ]
 
+    '''
+
+    code2 = '''
+        while # M0[c] ->     
+            [ CX[c t] || t :=0 ]
+        # M1[c] -> end
     '''
 
     ast = parser.parse(code2)
 
+    print(ast)
     fc = compile_fc(ast)
     fc.show()
 

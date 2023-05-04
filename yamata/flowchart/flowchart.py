@@ -5,10 +5,13 @@ from typing import List
 import graphviz
 
 class Vertex:
-    def __init__(self, _label):
+    def __init__(self, _label, _id : int):
 
         # the label for identity of vertices
         self.label = _label 
+
+        # the unique number assigned to this vertex
+        self.id = _id
 
         # the list of input and output edges
         self.inE : List[Edge] = []
@@ -52,7 +55,7 @@ class Flowchart:
             Create a new unique vertex in this flowchart, return the vertex.
             (uniqueness check not applied)
         '''
-        v = Vertex(label)
+        v = Vertex(label, len(self.vertices))
         self.vertices.append(v)
         return v
     
@@ -72,14 +75,13 @@ class Flowchart:
         dot = graphviz.Digraph()
         
         for v in self.vertices:
-            print(str(v.label))
-            dot.node(str(v.label), v.processed_label(), 
+            dot.node(str(v.id), v.processed_label(), 
                     shape = "box", style="filled",
                     fontname = "Consolas",
                     labeljust="l")
 
         for e in self.edges:
-            dot.edge(str(e.A.label), str(e.B.label))
+            dot.edge(str(e.A.id), str(e.B.id))
 
         dot.render(path)
 

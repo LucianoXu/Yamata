@@ -15,7 +15,6 @@ reserved = {
     'skip'  : 'SKIP',
     'abort' : 'ABORT',
     'if'    : 'IF',
-    'else'  : 'ELSE',
     'while' : 'WHILE',
     'end'   : 'END',
 }
@@ -24,14 +23,12 @@ reserved = {
 tokens = [
     'ID',
     'INIT',
-    'MUL_EQ',
     'GUARD',
     'PARALLEL',
  ] + list(reserved.values())
 
 # Regular expression rules for simple tokens
 t_INIT = r':=0'
-t_MUL_EQ = r'\*='
 t_GUARD = r'->'
 t_PARALLEL = r'\|\|'
 
