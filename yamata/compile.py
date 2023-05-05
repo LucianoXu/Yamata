@@ -40,6 +40,9 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
     elif isinstance(ast, AstWhile):
         return [(ast.body.vopt, AstSeq(ast.body.prog, ast)), 
                 (ast.term_vopt, AstTerminal())]
+    elif isinstance(ast, AstAtom):
+        return [(None, ast.prog)]
+    
     elif isinstance(ast, AstSeq):
         # case on S0
         next_S0_ls = next(ast.S0)
@@ -55,7 +58,10 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
         next_para : List[Tuple[AstStatement|AstVOpt|None, AstStatement]] = []
         for i in range(len(ast.ls)):
             ast_i = ast.ls[i]
-            if isinstance(ast_i, AstIf):
+            if isinstance(ast_i, AstAtom):
+                next_para.append((None, AstSeq(ast_i.prog, ast.remove(i))))
+
+            elif isinstance(ast_i, AstIf):
                 # process every guarded command
                 new_guarded = deepcopy(ast_i.ls)
                 for j in range(len(ast_i.ls)):
@@ -77,7 +83,12 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
 
             elif isinstance(ast_i, AstSeq):
                 # match S0
-                if isinstance(ast_i.S0, AstIf):
+                if isinstance(ast_i.S0, AstAtom):
+                    new_para = ast.ls.copy()
+                    new_para[i] = ast_i.S1
+                    next_para.append((None, AstSeq(ast_i.S0.prog, AstParallel(new_para))))
+
+                elif isinstance(ast_i.S0, AstIf):
                     # process every guarded command
                     new_guarded = deepcopy(ast_i.S0.ls)
                     for j in range(len(ast_i.S0.ls)):

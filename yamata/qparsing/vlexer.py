@@ -32,7 +32,7 @@ t_INIT = r':=0'
 t_GUARD = r'->'
 t_PARALLEL = r'\|\|'
 
-literals = [';', '[', ']', '#']
+literals = [';', '[', ']', '#', '<', '>']
 
 
 # use // or /* */ to comment

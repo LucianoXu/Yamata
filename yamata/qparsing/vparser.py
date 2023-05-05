@@ -36,6 +36,7 @@ def p_statement(p):
                 | if
                 | while
                 | parallel
+                | atom
     '''
     p[0] = p[1]
     
@@ -142,6 +143,16 @@ def p_parallel_head(p):
         p[0] = p[1].appended(p[3])
     else:
         raise Exception()
+
+    if p[0] is None:
+        raise Exception()
+    
+def p_atom(p):
+    '''
+    atom    : '<' prog '>'
+    '''
+
+    p[0] = qast.AstAtom(p[2])
 
     if p[0] is None:
         raise Exception()

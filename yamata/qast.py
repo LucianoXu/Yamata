@@ -244,3 +244,18 @@ class AstParallel(AstStatement):
         if len(new_ls) == 1:
             return new_ls[0]
         return AstParallel(new_ls)
+    
+class AstAtom(AstStatement):
+    def __init__(self, _prog : AstStatement):
+        self.prog = _prog
+    
+    def to_str_prefix(self, pre : str) -> str:
+        r = pre + "<\n"
+        r += self.prog.to_str_prefix(pre + "  ") + "\n"
+        r += pre + ">"
+        return r
+    
+    def __eq__(self, other):
+        if not isinstance(other, AstAtom):
+            return False
+        return self.prog == other.prog
