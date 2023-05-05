@@ -36,12 +36,19 @@ if __name__ == "__main__":
 
     '''
 
+    code2 = '''
+        c :=0
+    '''
+
+
     optlib = get_optlib()
     fc = compile(code2, optlib, "output")
 
     vinit = VVec(QVar(['c', 't']), np.array([1., 0., 0., 0.]))
+    vbeta = VVec(QVar(['c', 't']), np.array([1., 0., 0., 1.])/np.sqrt(2))
+    v0 = VVec(QVar(['c', 't']), np.array([0., 0., 1., 1.])/np.sqrt(2))
 
-    res = vecsim(fc, vinit, 100, 1000)
+    res = vecsim(fc, v0, 100, 1000)
 
     print(res)
 

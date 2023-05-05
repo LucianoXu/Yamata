@@ -13,6 +13,10 @@ from .flowchart.flowchart import Flowchart
 import random
 from tqdm import tqdm
 
+M0 = np.array([[1., 0.], [0., 0.]])
+M1 = np.array([[0., 0.], [0., 1.]])
+X = np.array([[0., 1.], [1., 0.]])
+
 class MachineState:
     def __init__(self, _vstate : VVec, _vertex : Vertex):
         self.vstate = _vstate
@@ -43,7 +47,36 @@ class MachineState:
             
             if isinstance(e, InitEdge):
                 # Note: initialization is interpreted as multiple [if - skip - X gate] statements
-                raise NotImplementedError()
+                cur_v = self.vstate
+                for q in e.qvar.ls:
+                    # calculate probabilities
+                    prob : List[float] = []
+                    mea_stt : List[VVec] = []
+
+                    # M0
+                    mopt = VMat(QVar([q]), M0)
+                    v = cur_v.Mapply(mopt)
+                    mea_stt.append(v)
+                    prob.append(v.norm2())
+
+                    # M1
+                    mopt = VMat(QVar([q]), M1)
+                    v = cur_v.Mapply(mopt)
+                    mea_stt.append(v)
+                    prob.append(v.norm2())
+
+                    # make a sampling
+                    res = sampling(prob)
+
+                    # initialization
+                    if res == 0:
+                        cur_v = mea_stt[0].normalized()
+                    else:
+                        cur_v = mea_stt[1].normalized()
+                        xopt = VMat(QVar([q]), X)
+                        cur_v = cur_v.Mapply(xopt)
+
+                return MachineState(cur_v, e.B)
 
         if isinstance(self.vertex, PVertex):
             # make an arbitrary choice
