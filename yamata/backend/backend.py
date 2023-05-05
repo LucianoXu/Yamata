@@ -36,6 +36,20 @@ class QVar:
                 r.append(i)
         return QVar(r)
     
+    def __str__(self):
+        r = '['
+        for i in range(len(self.ls)-1):
+            r += self.ls[i] + ' '
+        r += self.ls[-1] + ']'
+        return r
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return self.ls == other.ls
+
+    
+
     def perm_idx_to(self, qvar : QVar) -> Tuple[int]:
         '''
         The permutation from the current qvar to the desired qvar.
@@ -88,6 +102,17 @@ class VVec(VTerm):
             raise ValueError("Dimensions are not consistent.")
         
         self.vec = _vec
+    
+    def __str__(self) -> str:
+        return str(self.qvar) + ":" + str(self.vec)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, VVec):
+            return False
+        if not (self.qvar == other.qvar):
+            return False
+        
+        return np.max(np.abs(self.vec-other.vec)) < self.eps   # type: ignore
 
     def transform_to(self, tgt_qvar: QVar) -> VVec:
         qvar_perm = list(self.qvar.perm_idx_to(tgt_qvar))
@@ -130,6 +155,25 @@ class VVec(VTerm):
         temp_m = vmat.extend_to(common_qvar)
         new_v = temp_m.mat @ temp_v.vec
         return VVec(common_qvar, new_v)
+    
+    def norm_vec(self) -> VVec:
+        '''
+            return the vector v^dagger * v, in real numbers
+        '''
+        norm_v = np.real(self.vec.conj() * self.vec)
+        return VVec(self.qvar, norm_v)
+    
+    def norm2(self) -> float:
+        '''
+            return the square of the norm of this vector
+        '''
+        return sum(np.real(self.vec.conj() * self.vec))
+    
+    def normalized(self) -> VVec:
+        '''
+            return the normalized vector
+        '''
+        return VVec(self.qvar, self.vec / np.sqrt(self.norm2()))
     
         
 class VMat(VTerm):
@@ -185,11 +229,11 @@ class VMat(VTerm):
             appendix = np.identity(2**new_qubitn).reshape((2,)*new_qubitn*2)
             new_m = np.tensordot(new_m, appendix, 0)
             temp_perm = []
-            for i in range(2):
-                temp_perm += list(range(i*self.qnum, (i+1)*self.qnum))
-                temp_perm += list(
-                    range(self.qnum + i*new_qubitn, self.qnum + (i+1)*new_qubitn)
-                )
+            
+            temp_perm += list(range(self.qnum))
+            temp_perm += list(range(2*self.qnum, 2*self.qnum + new_qubitn))
+            temp_perm += list(range(self.qnum, 2 * self.qnum))
+            temp_perm += list(range(2*self.qnum + new_qubitn, 2*self.qnum + 2*new_qubitn))
             
             new_m = new_m.transpose(temp_perm).reshape((2**len(tgt_qvar), 2**len(tgt_qvar)))
 

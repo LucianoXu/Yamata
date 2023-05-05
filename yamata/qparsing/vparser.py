@@ -132,12 +132,12 @@ def p_parallel(p):
     
 def p_parallel_head(p):
     '''
-    parallel_head   : '[' prog
+    parallel_head   : '[' prog PARALLEL prog
                     | parallel_head PARALLEL prog
     '''
 
-    if len(p) == 3:
-        p[0] = qast.AstParallel([p[2]])
+    if len(p) == 5:
+        p[0] = qast.AstParallel([p[2], p[4]])
     elif len(p) == 4:
         p[0] = p[1].appended(p[3])
     else:

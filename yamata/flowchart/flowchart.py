@@ -15,7 +15,14 @@ class Flowchart:
         # all vertices for this flowchart
         self.vertices : List[Vertex] = []
         self.edges : List[Edge] = []
-        self.optlib : OptEnv | None = None
+        self._optlib : OptEnv | None = None
+
+    @property
+    def optlib(self) -> OptEnv:
+        if self._optlib is None:
+            raise ValueError("Operator libarary not designated.")
+        
+        return self._optlib
 
     def findV(self, label) -> None | Vertex:
         '''
@@ -93,7 +100,7 @@ class Flowchart:
             operator library [optlib].
         '''
 
-        self.optlib = optlib
+        self._optlib = optlib
 
         for e in self.edges:
             e.semantic_check(optlib)
