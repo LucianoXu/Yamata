@@ -16,6 +16,7 @@ from .flowchart.flowchart import Flowchart, Vertex
 from .backend import OptEnv
 
 from .qast import *
+from copy import deepcopy
 
 
 def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStatement]]:
@@ -56,7 +57,7 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
             ast_i = ast.ls[i]
             if isinstance(ast_i, AstIf):
                 # process every guarded command
-                new_guarded = ast_i.ls.copy()
+                new_guarded = deepcopy(ast_i.ls)
                 for j in range(len(ast_i.ls)):
                     new_para = ast.ls.copy()
                     new_para[i] = ast_i.ls[j].prog
@@ -78,7 +79,7 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
                 # match S0
                 if isinstance(ast_i.S0, AstIf):
                     # process every guarded command
-                    new_guarded = ast_i.S0.ls.copy()
+                    new_guarded = deepcopy(ast_i.S0.ls)
                     for j in range(len(ast_i.S0.ls)):
                         new_para = ast.ls.copy()
                         # sequential composition here
@@ -87,7 +88,7 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
                     
                     next_para.append((None, AstIf(new_guarded)))
                 
-                if isinstance(ast_i.S0, AstWhile):
+                elif isinstance(ast_i.S0, AstWhile):
                     # expand while to a if statement
                     new_para = ast.ls.copy()
                     # sequential composition here
@@ -100,7 +101,7 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
                     new_guarded.append(AstGuardedProg(ast_i.S0.term_vopt, AstParallel(new_para)))
                     next_para.append((None, AstIf(new_guarded)))
 
-                if isinstance(ast_i.S0, AstSkip) or isinstance(ast_i.S0, AstAbort)\
+                elif isinstance(ast_i.S0, AstSkip) or isinstance(ast_i.S0, AstAbort)\
                     or isinstance(ast_i.S0, AstInit) or isinstance(ast_i.S0, AstUnitary):
                     new_para = ast.ls.copy()
                     new_para[i] = ast_i.S1
@@ -108,7 +109,8 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
 
                 else:
                     raise Exception()
-            
+                
+
             elif isinstance(ast_i, AstSkip) or isinstance(ast_i, AstAbort)\
                 or isinstance(ast_i, AstInit) or isinstance(ast_i, AstUnitary):
                 

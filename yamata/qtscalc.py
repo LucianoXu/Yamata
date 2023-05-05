@@ -74,7 +74,8 @@ class QtsRho(Qts):
             raise Exception()
         
     def _layout(self, dot: Digraph) -> None:
-        dot.node(str(self.id), str(self.rho), shape = 'box', fontname = "Consolas")
+        dot.node(str(self.id), str(self.rho), style = "filled",
+                 shape = 'box', fontname = "Arial")
 
     def reduce(self) -> QtsRho | QtsNondet:
         return self
@@ -92,7 +93,9 @@ class QtsNondet(Qts):
         return QtsNondet([qts.opt_apply(vo) for qts in self.ls])
     
     def _layout(self, dot: Digraph) -> None:
-        dot.node(str(self.id), '', shape = "box")
+        dot.node(str(self.id), '', shape = "square", width= '0.3',
+                 style='filled, bold', fillcolor='lightyellow')
+
         for sub in self.ls:
             dot.edge(str(self.id), str(sub.id))
             sub._layout(dot)
@@ -126,7 +129,9 @@ class QtsProb(Qts):
         return QtsProb([qts.opt_apply(vo) for qts in self.ls])
     
     def _layout(self, dot: Digraph) -> None:
-        dot.node(str(self.id), '')
+        dot.node(str(self.id), '', shape='circle', width= '0.3',
+                 style='filled, bold', fillcolor='lightblue')
+
         for sub in self.ls:
             dot.edge(str(self.id), str(sub.id))
             sub._layout(dot)

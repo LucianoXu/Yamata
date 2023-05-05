@@ -141,7 +141,7 @@ class VVec(VTerm):
             appendix[0] = 1.
             appendix = appendix.reshape((2,)*new_qubitn)
             
-            new_v = np.tensordot(new_v, appendix, 0)
+            new_v = np.tensordot(new_v, appendix, 0).reshape((-1,))
             temp_v = VVec(appended_qvar, new_v)
         
             # permute
@@ -190,6 +190,13 @@ class VVec(VTerm):
             return the normalized vector
         '''
         return VVec(self.qvar, self.vec / np.sqrt(self.norm2()))
+    
+    def outer(self) -> VMat:
+        '''
+            return the outproduct
+        '''
+        mat = np.tensordot(self.vec, self.vec.conj(), 0)
+        return VMat(self.qvar, mat)
     
         
 class VMat(VTerm):
