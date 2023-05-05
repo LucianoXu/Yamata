@@ -75,7 +75,7 @@ class Flowchart:
         e.A.outE.append(e)
         e.B.inE.append(e)
 
-    def show(self, path: str='output', show_prog = True):
+    def show(self, path: str='flowchart', show_prog = True):
         '''
             output the flowchart diagram
         '''

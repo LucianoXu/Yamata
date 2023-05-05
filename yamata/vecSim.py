@@ -7,8 +7,7 @@ from __future__ import annotations
 from typing import List, Tuple, Dict
 
 from .backend import *
-from .flowchart.vertex_edge import *
-from .flowchart.flowchart import Flowchart
+from .flowchart.flowchart import *
 
 import random
 from tqdm import tqdm

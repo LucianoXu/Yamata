@@ -37,6 +37,9 @@ class QVar:
         return QVar(r)
     
     def __str__(self):
+        if len(self.ls) == 0:
+            return '[]'
+        
         r = '['
         for i in range(len(self.ls)-1):
             r += self.ls[i] + ' '
@@ -109,10 +112,8 @@ class VVec(VTerm):
     def __eq__(self, other) -> bool:
         if not isinstance(other, VVec):
             return False
-        if not (self.qvar == other.qvar):
-            return False
         
-        return np.max(np.abs(self.vec-other.vec)) < self.eps   # type: ignore
+        return np.max(np.abs((self - other).vec)) < self.eps
 
     def transform_to(self, tgt_qvar: QVar) -> VVec:
         qvar_perm = list(self.qvar.perm_idx_to(tgt_qvar))
@@ -145,7 +146,22 @@ class VVec(VTerm):
         
             # permute
             return temp_v.transform_to(tgt_qvar)
-        
+
+
+    def __add__(self, vmat: VVec) -> VVec:
+        common_qvar = self.qvar + vmat.qvar
+        temp1 = self.extend_to(common_qvar)
+        temp2 = vmat.extend_to(common_qvar)
+        new_v = temp1.vec + temp2.vec
+        return VVec(common_qvar, new_v)
+    
+    def __sub__(self, vmat: VVec) -> VVec:
+        common_qvar = self.qvar + vmat.qvar
+        temp1 = self.extend_to(common_qvar)
+        temp2 = vmat.extend_to(common_qvar)
+        new_v = temp1.vec - temp2.vec      # type: ignore
+        return VVec(common_qvar, new_v)
+    
     def Mapply(self, vmat : VMat) -> VVec:
         '''
             return the result of applying vmat on this vvec, in the qvar order of current vvec.
@@ -186,6 +202,10 @@ class VMat(VTerm):
     def zeroMat() -> VMat:
         return VMat(QVar([]), np.array([[0.]]))
     
+    def __str__(self) -> str:
+        r = str(self.qvar)+"\n"
+        r += str(self.mat)
+        return r
 
     def __init__(self, _qvar : QVar, _mat : np.ndarray) -> None:
         super().__init__(_qvar)
@@ -198,6 +218,12 @@ class VMat(VTerm):
             raise ValueError("Dimensions are not consistent.")
 
         self.mat = _mat
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, VMat):
+            return False
+        
+        return np.max(np.abs((self-other).mat)) < self.eps
 
     def transform_to(self, tgt_qvar: QVar) -> VMat:
         qvar_perm = list(self.qvar.perm_idx_to(tgt_qvar))
@@ -246,32 +272,55 @@ class VMat(VTerm):
     def dagger(self) -> VMat:
         return VMat(self.qvar, self.mat.conjugate().transpose())
 
-    def mul(self, vmat: VMat) -> VMat:
-        common_qvar = self.qvar + vmat.qvar
+    def mul(self, vmat: VMat, self_order = True) -> VMat:
+        '''
+        self_order : if set to False, will try to order the variables
+            according to [vmat]
+        '''
+        if self_order:
+            common_qvar = self.qvar + vmat.qvar
+        else:
+            common_qvar = vmat.qvar + self.qvar
+
         temp1 = self.extend_to(common_qvar)
         temp2 = vmat.extend_to(common_qvar)
         new_mat = temp1.mat @ temp2.mat
         return VMat(common_qvar, new_mat)
+    
+    def trace(self) -> float:
+        return np.trace(self.mat)
         
     def __add__(self, vmat: VMat) -> VMat:
         common_qvar = self.qvar + vmat.qvar
         temp1 = self.extend_to(common_qvar)
         temp2 = vmat.extend_to(common_qvar)
-        new_so = temp1.mat + temp2.mat
-        return VMat(common_qvar, new_so)
+        new_m = temp1.mat + temp2.mat
+        return VMat(common_qvar, new_m)
     
     def __sub__(self, vmat: VMat) -> VMat:
         common_qvar = self.qvar + vmat.qvar
         temp1 = self.extend_to(common_qvar)
         temp2 = vmat.extend_to(common_qvar)
-        new_so = temp1.mat - temp2.mat      # type: ignore
-        return VMat(common_qvar, new_so)
+        new_m = temp1.mat - temp2.mat      # type: ignore
+        return VMat(common_qvar, new_m)
     
     def __le__(self, b : VMat) -> bool:
         common_qvar = self.qvar + b.qvar
         extendedself = self.extend_to(common_qvar)
         extendedb = b.extend_to(common_qvar)
 
-        diff : np.ndarray = extendedb.mat - self.mat  # type: ignore
+        diff : np.ndarray = extendedb.mat - extendedself.mat  # type: ignore
         eig_vals = np.linalg.eigvals(diff)
         return bool(np.min(eig_vals) > -self.eps)
+    
+    def SOapply(self, vso : VSuperOpt) -> VMat:
+        opt_sum = VMat.zeroMat()
+        for vopt in vso.ls:
+            opt_sum = opt_sum + vopt.mul(self, False).mul(vopt.dagger())
+        return opt_sum
+
+
+
+class VSuperOpt(VTerm):
+    def __init__(self, _ls : List[VMat]):
+        self.ls = _ls
