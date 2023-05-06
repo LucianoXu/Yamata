@@ -1,6 +1,6 @@
 
 from __future__ import annotations
-from typing import List
+from typing import List, Dict
 
 from graphviz import Digraph
 
@@ -36,11 +36,56 @@ class Vertex:
         '''
         raise NotImplementedError()
 
-    def layout(self, dot : Digraph, show_prog = True) -> None:
+    def layout(self, dot : Digraph, show_prog = True, show_id = False, 
+               asn_label : Dict[int, str] = {}) -> None:
         '''
         add this vertex to the flowchart
+        show_prog: whether to show the remaining program
+        show_id : whether to show the vertex id 
+        asn_label : whether to display assertion labels
         '''
 
+        # TODO #4
+
+        label_str = ""
+
+        if show_id:
+            label_str += "#" + str(self.id)
+
+        if show_prog:
+            label_str += "\n" + self.processed_label()
+
+        if self.id in asn_label:
+            label_str += "\n\n" + asn_label[self.id]
+
+        self.draw_node(dot, label_str)
+
+        return 
+    
+        # the following code is for html representation  
+
+        label_str = "<"
+
+        if show_id:
+            label_str += '''
+                <table border="0" cellborder="0" cellpadding="3" bgcolor="white">
+                <tr>
+                <td bgcolor="black" align="center" colspan="2"><font color="white">#'''\
+                + str(self.id) + '''</font></td></tr>'''
+
+        if show_prog:
+            label_str += "<tr><td>" + self.processed_label() + "</td></tr>"
+        
+        label_str += "</table>>"
+
+        dot.node(str(self.id), label_str, 
+            shape = "box, bold",
+            fontname = "Consolas",
+            labeljust="l")
+        
+
+    
+    def draw_node(self, dot : Digraph, label : str) -> None:
         raise NotImplementedError()
     
     def processed_label(self) -> str:
@@ -57,17 +102,13 @@ class TVertex(Vertex):
     '''
     terminal vertex
     '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
-            shape = "doublecircle",
+    def draw_node(self, dot : Digraph, label: str) -> None:
+        dot.node(str(self.id), label, 
+            shape = "box", style= "bold",
             fontname = "Consolas",
             labeljust="l")
-        
+
+
     def semantic_check(self, optlib: OptEnv) -> None:
         return  # nothing to check
 
@@ -76,16 +117,12 @@ class OVertex(Vertex):
     '''
     ordinary vertex, one outgoing edge
     '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
+    def draw_node(self, dot: Digraph, label: str) -> None:
+        dot.node(str(self.id), label, 
             shape = "box", style="filled",
             fontname = "Consolas",
             labeljust="l")
+
         
     def semantic_check(self, optlib: OptEnv) -> None:
         return  # nothing to check
@@ -95,16 +132,12 @@ class PVertex(Vertex):
     '''
     parallel composition vertex
     '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
+    def draw_node(self, dot: Digraph, label: str) -> None:
+        dot.node(str(self.id), label, 
             shape = "box", style="filled", fillcolor = "lightyellow",
             fontname = "Consolas",
             labeljust="l")
+        
         
     def semantic_check(self, optlib: OptEnv) -> None:
         return  # nothing to check
@@ -113,13 +146,8 @@ class MVertex(Vertex):
     '''
     measurement vertex
     '''
-    def layout(self, dot: Digraph, show_prog = True) -> None:
-        if show_prog:
-            label_str = self.processed_label()
-        else:
-            label_str = str(self.id)
-
-        dot.node(str(self.id), label_str, 
+    def draw_node(self, dot: Digraph, label: str) -> None:
+        dot.node(str(self.id), label, 
             shape = "box", style="filled", fillcolor = "lightblue",
             fontname = "Consolas",
             labeljust="l")

@@ -75,7 +75,8 @@ class Flowchart:
         e.A.outE.append(e)
         e.B.inE.append(e)
 
-    def show(self, path: str='flowchart', show_prog = True):
+    def show(self, path: str='flowchart', show_prog = True, show_id = False, 
+             asn_label : Dict[int, str] = {}):
         '''
             output the flowchart diagram
         '''
@@ -83,7 +84,7 @@ class Flowchart:
 
         
         for v in self.vertices:
-            v.layout(dot, show_prog)
+            v.layout(dot, show_prog, show_id, asn_label)
 
         for e in self.edges:
             e.layout(dot)
