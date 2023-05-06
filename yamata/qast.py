@@ -36,6 +36,9 @@ class AstQVar:
         return AstQVar(self.ls + [id])
     
     def __str__(self):
+        if len(self.ls) == 0:
+            return "[]"
+        
         r = '['
         for i in range(len(self.ls)-1):
             r += self.ls[i] + ' '
@@ -223,11 +226,11 @@ class AstParallel(AstStatement):
         return AstParallel(self.ls + [seq])
     
     def to_str_prefix(self, pre : str) -> str:
-        r = pre + "[ \n"
+        r = pre + "{ \n"
         for i in range(0, len(self.ls) - 1):
             r += self.ls[i].to_str_prefix(pre + "  ") + " ||\n"
         r += self.ls[-1].to_str_prefix(pre + "  ") + "\n"
-        r += pre + "]"
+        r += pre + "}"
         return r
     
     def __eq__(self, other):

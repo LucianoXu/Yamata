@@ -53,10 +53,14 @@ class Vertex:
             label_str += "#" + str(self.id)
 
         if show_prog:
-            label_str += "\n" + self.processed_label()
+            if show_id:
+                label_str += "\n"
+            label_str += self.processed_label()
 
         if self.id in asn_label:
-            label_str += "\n\n" + asn_label[self.id]
+            if show_id or show_prog:
+                label_str += "\n\n" 
+            label_str += asn_label[self.id]
 
         self.draw_node(dot, label_str)
 

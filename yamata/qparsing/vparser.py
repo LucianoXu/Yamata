@@ -123,7 +123,7 @@ def p_while(p):
 
 def p_parallel(p):
     '''
-    parallel    : parallel_head ']'
+    parallel    : parallel_head '}'
     '''
 
     p[0] = p[1]
@@ -133,7 +133,7 @@ def p_parallel(p):
     
 def p_parallel_head(p):
     '''
-    parallel_head   : '[' prog PARALLEL prog
+    parallel_head   : '{' prog PARALLEL prog
                     | parallel_head PARALLEL prog
     '''
 
@@ -198,11 +198,11 @@ def p_qvar(p):
 
 def p_qvar_pre(p):
     '''
-    qvar_pre    : '[' ID
+    qvar_pre    : '['
                 | qvar_pre ID
     '''
     if p[1] == '[':
-        p[0] = qast.AstQVar([p[2]])
+        p[0] = qast.AstQVar([])
     else:
         p[0] = p[1].appended(p[2])
 
@@ -212,7 +212,7 @@ def p_qvar_pre(p):
 def p_error(p):
     if p is None:
         raise Exception("unexpected end of file")
-    raise Exception("Syntax error in input: '" + str(p.value) + "'.")
+    raise Exception("Syntax error in input: '" + str(p.value) + "'. (" + str(p.lineno) + ", " + str(p.lexpos) + ")")
 
 
 # Build the lexer
