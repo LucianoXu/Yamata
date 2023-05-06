@@ -7,3 +7,4 @@ from .FengSemEx import *
 from .XuDemoEx import *
 
 from .ProducerConsumerEx import *
+from .LoopSimpEx import *

@@ -17,6 +17,7 @@ reserved = {
     'if'    : 'IF',
     'while' : 'WHILE',
     'end'   : 'END',
+    'loop'  : 'LOOP',
 }
 
 # List of token names.

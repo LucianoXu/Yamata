@@ -37,6 +37,7 @@ def p_statement(p):
                 | while
                 | parallel
                 | atom
+                | loop
     '''
     p[0] = p[1]
     
@@ -153,6 +154,16 @@ def p_atom(p):
     '''
 
     p[0] = qast.AstAtom(p[2])
+
+    if p[0] is None:
+        raise Exception()
+    
+def p_loop(p):
+    '''
+    loop    : LOOP prog END
+    '''
+    
+    p[0] = qast.AstLoop(p[2])
 
     if p[0] is None:
         raise Exception()

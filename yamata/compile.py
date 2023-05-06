@@ -43,6 +43,9 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
     elif isinstance(ast, AstAtom):
         return [(None, ast.prog)]
     
+    elif isinstance(ast, AstLoop):
+        return [(None, AstSeq(ast.body, ast))]
+    
     elif isinstance(ast, AstSeq):
         # case on S0
         next_S0_ls = next(ast.S0)
@@ -60,6 +63,11 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
             ast_i = ast.ls[i]
             if isinstance(ast_i, AstAtom):
                 next_para.append((None, AstSeq(ast_i.prog, ast.remove(i))))
+
+            elif isinstance(ast_i, AstLoop):
+                new_para = ast.ls.copy()
+                new_para[i] = AstSeq(ast_i.body, ast_i)
+                next_para.append((None, AstParallel(new_para)))
 
             elif isinstance(ast_i, AstIf):
                 # process every guarded command
@@ -87,6 +95,11 @@ def next(ast : AstStatement) -> List[Tuple[AstStatement|AstVOpt|None, AstStateme
                     new_para = ast.ls.copy()
                     new_para[i] = ast_i.S1
                     next_para.append((None, AstSeq(ast_i.S0.prog, AstParallel(new_para))))
+
+                elif isinstance(ast_i.S0, AstLoop):
+                    new_para = ast.ls.copy()
+                    new_para[i] = AstSeq(ast_i.S0.body, ast_i)
+                    next_para.append((None, AstParallel(new_para)))
 
                 elif isinstance(ast_i.S0, AstIf):
                     # process every guarded command

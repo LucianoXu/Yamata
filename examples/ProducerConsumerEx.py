@@ -7,24 +7,23 @@ def ProducerConsumerEx():
     code = '''
         [c b d] :=0;
         {
-            while # MI[] -> 
-                    if # M0[c] -> 
-                            <H[b]; X[c]>
-                       # M1[c] -> skip 
-                    end
-                  # MZero[] -> end
+            loop
+                if # M0[c] -> 
+                        <H[b]; X[c]>
+                    # M1[c] -> skip 
+                end
+            end
             ||
-            while # MI[] ->
-                    if # M0[c] -> skip
-                       # M1[c] ->
-                            <SWAP[b d]; X[c]>;
+            loop
+				if # M0[c] -> skip
+					# M1[c] ->
+						<SWAP[b d]; X[c]>;
 
-                            // an arbitrary operation here
-                            if # M0[d] -> skip # M1[d] -> skip end;
-                            d :=0
-                    end
-
-                  # MZero[] -> end
+						// an arbitrary operation here
+						if # M0[d] -> skip # M1[d] -> skip end;
+						d :=0
+				end
+            end
         }
     '''
     vec = np.array([1., 0., 0., 0., 0., 0., 0., 0.])

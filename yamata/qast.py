@@ -111,6 +111,21 @@ class AstTerminal(AstStatement):
     
     def __eq__(self, other):
         return isinstance(other, AstTerminal)
+    
+class AstLoop(AstStatement):
+    def __init__(self, _body : AstStatement):
+        self.body = _body
+
+    def to_str_prefix(self, pre : str) -> str:
+        r = pre + "loop\n"
+        r += self.body.to_str_prefix(pre + "  ")
+        r += "\n" + pre + "end"
+        return r
+    
+    def __eq__(self, other):
+        if not isinstance(other, AstLoop):
+            return False
+        return self.body == other.body
 
 
 class AstSeq(AstStatement):
