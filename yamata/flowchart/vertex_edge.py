@@ -36,8 +36,8 @@ class Vertex:
         '''
         raise NotImplementedError()
 
-    def layout(self, dot : Digraph, show_prog = True, show_id = False, 
-               asn_label : Dict[int, str] = {}) -> None:
+    def layout(self, dot : Digraph, show_prog = True, show_id = False,
+               asn_label : Dict[int, str] = {}, highlighted = False) -> None:
         '''
         add this vertex to the flowchart
         show_prog: whether to show the remaining program
@@ -62,7 +62,7 @@ class Vertex:
                 label_str += "\n\n" 
             label_str += asn_label[self.id]
 
-        self.draw_node(dot, label_str)
+        self.draw_node(dot, label_str, highlighted)
 
         return 
     
@@ -89,7 +89,7 @@ class Vertex:
         
 
     
-    def draw_node(self, dot : Digraph, label : str) -> None:
+    def draw_node(self, dot : Digraph, label : str, highlighted = False) -> None:
         raise NotImplementedError()
     
     def processed_label(self) -> str:
@@ -106,11 +106,17 @@ class TVertex(Vertex):
     '''
     terminal vertex
     '''
-    def draw_node(self, dot : Digraph, label: str) -> None:
-        dot.node(str(self.id), label, 
-            shape = "box", style= "bold",
-            fontname = "Consolas",
-            labeljust="l")
+    def draw_node(self, dot : Digraph, label: str, highlighted = False) -> None:
+        if highlighted:
+            dot.node(str(self.id), label, color = "red",
+                shape = "box", style= "bold",
+                fontname = "Consolas",
+                labeljust="l")
+        else:
+            dot.node(str(self.id), label,
+                shape = "box", style= "bold",
+                fontname = "Consolas",
+                labeljust="l")
 
 
     def semantic_check(self, optlib: OptEnv) -> None:
@@ -121,11 +127,17 @@ class OVertex(Vertex):
     '''
     ordinary vertex, one outgoing edge
     '''
-    def draw_node(self, dot: Digraph, label: str) -> None:
-        dot.node(str(self.id), label, 
-            shape = "box", style="filled",
-            fontname = "Consolas",
-            labeljust="l")
+    def draw_node(self, dot: Digraph, label: str, highlighted = False) -> None:
+        if highlighted:
+            dot.node(str(self.id), label, color = "red",
+                shape = "box", style="filled, bold", fillcolor = "lightgray",
+                fontname = "Consolas",
+                labeljust="l")
+        else:
+            dot.node(str(self.id), label,
+                shape = "box", style="filled",
+                fontname = "Consolas",
+                labeljust="l")
 
         
     def semantic_check(self, optlib: OptEnv) -> None:
@@ -136,11 +148,18 @@ class PVertex(Vertex):
     '''
     parallel composition vertex
     '''
-    def draw_node(self, dot: Digraph, label: str) -> None:
-        dot.node(str(self.id), label, 
-            shape = "box", style="filled", fillcolor = "lightyellow",
-            fontname = "Consolas",
-            labeljust="l")
+    def draw_node(self, dot: Digraph, label: str, highlighted = False) -> None:
+        if highlighted:
+            dot.node(str(self.id), label, color = "red",
+                shape = "box", style="filled, bold", fillcolor = "lightyellow",
+                fontname = "Consolas",
+                labeljust="l")
+        else:
+            dot.node(str(self.id), label,
+                shape = "box", style="filled", fillcolor = "lightyellow",
+                fontname = "Consolas",
+                labeljust="l")
+
         
         
     def semantic_check(self, optlib: OptEnv) -> None:
@@ -150,11 +169,18 @@ class MVertex(Vertex):
     '''
     measurement vertex
     '''
-    def draw_node(self, dot: Digraph, label: str) -> None:
-        dot.node(str(self.id), label, 
-            shape = "box", style="filled", fillcolor = "lightblue",
-            fontname = "Consolas",
-            labeljust="l")
+    def draw_node(self, dot: Digraph, label: str, highlighted = False) -> None:
+        if highlighted:
+            dot.node(str(self.id), label, color = "red",
+                shape = "box", style="filled, bold", fillcolor = "lightblue",
+                fontname = "Consolas",
+                labeljust="l")
+        else:
+            dot.node(str(self.id), label,
+                shape = "box", style="filled", fillcolor = "lightblue",
+                fontname = "Consolas",
+                labeljust="l")
+
         
     def semantic_check(self, optlib: OptEnv) -> None:
         optsum = VMat.zeroMat()

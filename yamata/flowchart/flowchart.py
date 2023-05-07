@@ -95,6 +95,31 @@ class Flowchart:
 
         dot.render(path)
 
+    def show_neighbour(self, v_id : int,
+                       path: str='flowchart_neighbour', 
+                       show_prog = True, show_id = False, 
+                        asn_label : Dict[int, str] = {}):
+        '''
+            display the neighbour vertices of a given vertex
+        '''
+
+        dot = Digraph()
+        v = self.vertices[v_id]
+
+        v.layout(dot, show_prog, show_id, asn_label, highlighted = True)
+
+        for e in v.inE:
+            e.A.layout(dot, show_prog, show_id, asn_label)
+            e.layout(dot)
+
+        for e in v.outE:
+            e.B.layout(dot, show_prog, show_id, asn_label)
+            e.layout(dot)
+
+        dot.view(path)
+
+
+
     def semantic_check(self, optlib : OptEnv) -> None:
         '''
             Check whether the flowchart is semantically valid with respect to the 
