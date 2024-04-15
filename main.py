@@ -1,73 +1,47 @@
 
-from yamata.compile import compile
-from yamata.vecSim import *
-from yamata.backend import *
+import numpy as np
+from yamata import *
+from examples import *
 from yamata.qtscalc import *
+
+from yamata.qparsing.vparser import parser
+from yamata.compile import compile_fc
 
 if __name__ == "__main__":
 
+    
+    # XuDemoEx()
 
-    code2 = '''
-        while # Mp[x] ->         
-            x *= H;
-            [ skip || abort ]
-        end;
-        x *= X
+    # exit()
+    
 
-        /*
-        [x] *= I;
-        if # Mp[x] -> skip
-           # Mm[x] -> skip
-        else
-            abort
-        end
-        */
-    '''
-    code2 = '''
-        while # M0[c] ->     
-            [ H[c] || skip ]
-        # M1[c] -> end
+    code = '''
+        { A1[q]; A2[q] || A1[q]; A2[q] || A1[q]; A2[q] }
     '''
 
-    code_example = '''
-        [ while # M0[c] ->     
-            CX[c t]
-        # M1[c] -> end 
-        || H[c]]
+    
+    ast = parser.parse(code)
 
-    '''
-
-    code2 = '''
-        c :=0
-    '''
-
-    vinit = VVec(QVar(['c', 't']), np.array([1., 0., 0., 0.]))
-    vbeta = VVec(QVar(['c', 't']), np.array([1., 0., 0., 1.])/np.sqrt(2))
-    v0 = VVec(QVar(['c', 't']), np.array([0., 0., 1., 1.])/np.sqrt(2))
-
-    rhoinit = VMat(QVar(['c', 't']), 
-                   np.array([[1., 0., 0., 0.],
-                             [0., 0., 0., 0.],
-                             [0., 0., 0., 0.],
-                             [0., 0., 0., 0.]]))
-
-    optlib = get_optlib()
-    fc = compile(code_example, optlib, "output")
-
-
-    # qtscalc
-    qts = qtscalc(fc, rhoinit, 10)
-
-    qts.show()
-
-    qts.reduce().show("reduced")
-
+    # compile abstract syntax tree to flowchart
+    fc = compile_fc(ast)
+    print(len(fc.vertices))
+    # fc.show("output/flowchart", False, True)
+    fc.show("output/flowchart")
     exit()
+    
 
+    vec = np.array([1., 0.])
+    vinit = VVec(QVar(['q']), vec)
 
-    # vecsim
-    res = vecsim(fc, v0, 100, 1000)
-    print(res)
+    fc = compile(code)
+    fc.show("output/flowchart", False, True)
+    # fc.show_neighbour(5, "output/neighbour")
 
+    # vec sim
+    print(vecsim(fc, vinit, 100, 200))
 
+    # qts calc
+    qts = qtscalc(fc, vinit.outer(), 12)
+    qts.show("output/qts")
+    qts.reduce().show("output/reduced")
 

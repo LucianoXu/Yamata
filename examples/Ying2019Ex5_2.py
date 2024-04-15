@@ -23,9 +23,9 @@ def Ying2019Ex5_2():
 
 
     code1 = '''
-        [ <H[p]; H[p]> || 
+        { <H[p]; H[p]> || 
           if # M0[p] -> skip
-             # M1[p] -> X[q] end ]
+             # M1[p] -> X[q] end }
     '''
 
     fc = compile(code1)

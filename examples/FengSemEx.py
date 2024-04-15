@@ -27,7 +27,7 @@ def FengSemEx():
         q :=0;
         if  # Mp[q] -> skip
             # Mm[q] -> skip end;
-        [X[q] || H[q]]
+        {X[q] || H[q]}
     '''
 
     fc = compile(code2)
